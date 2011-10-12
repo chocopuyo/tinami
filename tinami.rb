@@ -1,10 +1,13 @@
 # coding: UTF-8
 class Tinami
-   attr_accessor :api_key, :email
+  attr_reader :api_key, :email,:password,:auth_key
   require 'net/http'
+  require 'rubygems'
+  require 'nokogiri'
   Net::HTTP.version_1_2
-  @@http = Net::HTTP.new('api.tinami.com',80)
-  tinami_host = 'http://api.tinami.com'
+  @@tinami_host = 'api.tinami.com'
+  @@http = Net::HTTP.new(@@tinami_host,80)
+=begin
   @@url = {
 #response = http.post('/auth',)
     'auth' =>tinami_host+'/auth',
@@ -26,14 +29,19 @@ class Tinami
     'comment_remove'=>tinami_host+'/content/comment/remove',
     'support'=>tinami_host+'/content/support',
   }
-  url = 'test'
+=end
   def initialize(arr)
-    @api_key = arr.api_key
-    @email = arr.email 
-    @password = arr.password
+    @api_key = arr['api_key']
+    @email = arr['email']
+    @password = arr['password']
   end
+  #認証する
   def auth
-    print @@http.post('/auth',"api_key=#{@api_key}&email=#{@email}&password=").body
+    response = @@http.post('/auth',"api_key=#{@api_key}&email=#{@email}&password=#{@password}").body
+    doc = Nokogiri::XML(response)
+    @auth_key = doc.at_css("auth_key").content
+  end
+  def create_info
   end
 end
 
