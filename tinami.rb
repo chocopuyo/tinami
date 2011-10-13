@@ -27,9 +27,24 @@ class Tinami
       'thumbnail'=>doc.at_css('thumbnail').content
     }
   end
-  def content_search(tags)
-    response = @@http.post('/content/search',"api_key=#{@api_key}&auth_key=#{@auth_key}&tags=#{tags}&cont_type[]=1").body
+  def content_search(arr)
+    response = @@http.post('/content/search',"api_key=#{@api_key}&auth_key=#{@auth_key}&tags=#{arr['tags']}&cont_type[]=1").body
     doc = Nokogiri::XML(response)
+  end
+  def creator_info(prof_id)
+    response = @@http.post('/creator/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&prof_id=#{prof_id}").body
+    doc = Nokogiri::XML(response)
+  end
+  #作品情報の取得
+  def content_info(cont_id)
+    response = @@http.post('/content/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&cont_id=#{cont_id}").body
+    doc = Nokogiri::XML(response)
+  end
+  #作品のタグ一覧
+  def content_tags(cont_id)
+    response = @@http.post('/content/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&cont_id=#{cont_id}").body
+    doc = Nokogiri::XML(response)
+    doc.at_css('tags')
   end
 end
 
