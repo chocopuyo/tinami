@@ -1,5 +1,6 @@
 # coding: UTF-8
 require './tinami.rb'
+require './node'
 class EXTinami < Tinami
   attr_reader :api_key, :email,:password,:auth_key
   def relation_search_tags(tags)
@@ -20,5 +21,37 @@ class EXTinami < Tinami
       end
     end
     return {'tag'=>tag,'creator'=>creator}
+  end
+  def get_data_from_tag(tag)
+    data = {
+      'creator' => self.relation_search_tags(tag)['creator'].xpath("//name")[0].content,
+      'tag' => tag
+    }
+  end
+  def create_tree_from_tag(tag,max_depth)
+    tree = Tree.new
+    #データを取ってくる
+    data = self.get_data_from_tag(tag)
+    #rootノードを作ってあげる
+    root = tree.insert(nil,data)
+    #検索したイラストのタグを取得
+    tags = self.relation_search_tags(tag)['tag']
+    self.for_search_and_insert(root,tags,tree,0,max_depth)
+    return tree
+  end
+  def for_search_and_insert(parent,tags,tree,depth,max_depth)
+    puts depth
+    tags.each do |t|
+      #イラストの情報を取ってくる
+      data = {
+        'creator' => self.relation_search_tags(t)['creator'].xpath("//name")[0].content,
+        'tag' => t
+      }
+      #取得したデータをtreeに追加(親ノードのtagsに追加)
+      child = tree.insert(parent,data)
+      #イラストのタグを取得
+      tags = self.relation_search_tags(t)['tag']
+      self.for_search_and_insert(child,tags,tree,depth+=1,max_depth)if depth<max_depth
+    end
   end
 end
