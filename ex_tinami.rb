@@ -11,7 +11,7 @@ class EXTinami < Tinami
     #cont_idからそのイラストのクリエーター情報を取得
     cont = self.content_info(cont_id)
     prof_id = cont.at_css('creator').get_attribute("id")
-    creator = self.creator_info(prof_id)
+    creator = self.creator_info(prof_id,tags)
     #cont_idからそのイラストのタグ情報を取得
     tag = Array.new
     cont.xpath("//tag").each do |t|
@@ -23,10 +23,7 @@ class EXTinami < Tinami
     return {'tag'=>tag,'creator'=>creator}
   end
   def get_data_from_tag(tag)
-    data = {
-      'creator' => self.relation_search_tags(tag)['creator'].xpath("//name")[0].content,
-      'tag' => tag
-    }
+    creator_info = self.relation_search_tags(tag)['creator']
   end
   def create_tree_from_tag(tag,max_depth)
     tree = Tree.new
@@ -43,10 +40,7 @@ class EXTinami < Tinami
     puts depth
     tags.each do |t|
       #イラストの情報を取ってくる
-      data = {
-        'creator' => self.relation_search_tags(t)['creator'].xpath("//name")[0].content,
-        'tag' => t
-      }
+      data = self.get_data_from_tag(t)
       #取得したデータをtreeに追加(親ノードのtagsに追加)
       child = tree.insert(parent,data)
       #イラストのタグを取得
