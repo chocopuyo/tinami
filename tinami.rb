@@ -1,6 +1,6 @@
 # coding: UTF-8
 class Tinami
-  attr_reader :api_key, :email,:password,:auth_key
+#  attr_reader :api_key, :email,:password,:auth_key,:users
   require 'net/http'
   require 'rubygems'
   require 'nokogiri'
@@ -11,6 +11,7 @@ class Tinami
     @api_key = arr['api_key']
     @email = arr['email']
     @password = arr['password']
+    @users = Array.new
   end
   #認証する
   def auth
@@ -19,36 +20,35 @@ class Tinami
     @auth_key = doc.at_css("auth_key").content
   end
   #ユーザー情報をとってくる
-  def creator_info(prof_id,tag)
+  def creator_info(prof_id,tag,content)
     response = @@http.post('/creator/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&prof_id=#{prof_id}").body
     doc = Nokogiri::XML(response)
     data = {
-      'name'=>doc.at_css('name').content,
-      'thumbnail'=>doc.at_css('thumbnail').content,
+      'name'=>doc.xpath('//name')[0].content,
+      'thumbnail'=>doc.xpath('//thumbnail')[0].content,
+      'user_id' => prof_id,
+      'title' => content.xpath('//title')[0].content,
+      'image' => content.xpath('//image/url')[0].content,
       'tag'=>tag
     }
+    @users.push(data)
     return data
   end
-  def content_search(arr)
-    response = @@http.post('/content/search',"api_key=#{@api_key}&auth_key=#{@auth_key}&tags=#{arr['tags']}&cont_type[]=1").body
+  #タグを使って、画像を探す(認証なし)
+  def content_search_by_tag(tag)
+    response = @@http.post('/content/search',"api_key=#{@api_key}&tags=#{tag}&cont_type[]=1").body
     doc = Nokogiri::XML(response)
+    contents = doc.xpath('//content')
+    #検索数HIT数(MAX20)
+    size = contents.size
+    #検索したものからランダムにID抽出
+    result = contents[rand(size)].attribute('id')
+    return result
   end
-=begin
-  def creator_info(prof_id)
-    response = @@http.post('/creator/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&prof_id=#{prof_id}").body
-    doc = Nokogiri::XML(response)
-  end
-=end
-  #作品情報の取得
+  #作品情報の取得(認証なし)
   def content_info(cont_id)
     response = @@http.post('/content/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&cont_id=#{cont_id}").body
     doc = Nokogiri::XML(response)
-  end
-  #作品のタグ一覧
-  def content_tags(cont_id)
-    response = @@http.post('/content/info',"api_key=#{@api_key}&auth_key=#{@auth_key}&cont_id=#{cont_id}").body
-    doc = Nokogiri::XML(response)
-    doc.at_css('tags')
   end
 end
 
